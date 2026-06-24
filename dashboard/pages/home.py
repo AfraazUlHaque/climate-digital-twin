@@ -1,6 +1,6 @@
 import streamlit as st
 
-from dashboard.components.maps import (
+from components.maps import (
     generate_climate_grid,
     render_climate_map
 )

@@ -1,9 +1,9 @@
 import streamlit as st
 import plotly.express as px
 
-from dashboard.components.maps import generate_climate_grid, render_climate_map
-from dashboard.utils.data_loader import load_data
-from dashboard.components.charts import rainfall_forecast_chart, temperature_forecast_chart
+from components.maps import generate_climate_grid, render_climate_map
+from utils.data_loader import load_data
+from components.charts import rainfall_forecast_chart, temperature_forecast_chart
 
 
 def render():

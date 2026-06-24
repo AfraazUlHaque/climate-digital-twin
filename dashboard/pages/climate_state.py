@@ -1,12 +1,12 @@
 import streamlit as st
 import plotly.express as px
 
-from dashboard.utils.data_loader import load_data
-from dashboard.components.maps import (
+from utils.data_loader import load_data
+from components.maps import (
     generate_climate_grid,
     render_climate_map
 )
-from dashboard.components.charts import (
+from components.charts import (
     observed_rainfall_chart,
     observed_temperature_chart
 )

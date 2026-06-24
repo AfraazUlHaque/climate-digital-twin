@@ -1,8 +1,8 @@
 import streamlit as st
 
-from dashboard.components.maps import generate_climate_grid, render_climate_map
-from dashboard.utils.data_loader import load_data
-from dashboard.utils.helpers import (
+from components.maps import generate_climate_grid, render_climate_map
+from utils.data_loader import load_data
+from utils.helpers import (
     get_risk_level,
     calculate_simulated_temperature,
     calculate_simulated_rainfall

@@ -1,7 +1,7 @@
 import streamlit as st
 import plotly.express as px
 
-from dashboard.utils.data_loader import load_data
+from utils.data_loader import load_data
 
 def render():
 
