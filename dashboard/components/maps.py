@@ -39,18 +39,11 @@ def render_climate_map(grid, title, color_scale="Blues"):
 
     return fig
 
+
 def render_map():
-    import streamlit as st
-
     grid = generate_climate_grid("observed")
-
-    fig = render_climate_map(
+    return render_climate_map(
         grid,
         "Current Climate State",
         "Blues"
-    )
-
-    st.plotly_chart(
-        fig,
-        use_container_width=True
     )
