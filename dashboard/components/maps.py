@@ -1,20 +1,40 @@
-import folium
-from streamlit_folium import st_folium
+import numpy as np
+import plotly.express as px
 
-def render_map():
 
-    m = folium.Map(
-        location=[10.5, 77.5],
-        zoom_start=6
+def generate_climate_grid(mode="observed", temp_increase=0, rainfall_change=0):
+    np.random.seed(42)
+
+    base = np.random.normal(loc=65, scale=18, size=(25, 25))
+    base = np.clip(base, 0, 140)
+
+    if mode == "predicted":
+        grid = base + np.random.normal(3, 8, size=(25, 25))
+
+    elif mode == "scenario":
+        grid = base * (1 + rainfall_change / 100) - (temp_increase * 3)
+
+    elif mode == "difference":
+        predicted = base + np.random.normal(3, 8, size=(25, 25))
+        grid = predicted - base
+
+    else:
+        grid = base
+
+    return np.clip(grid, -50, 160)
+
+
+def render_climate_map(grid, title, color_scale="Blues"):
+    fig = px.imshow(
+        grid,
+        color_continuous_scale=color_scale,
+        title=title,
+        labels=dict(color="Rainfall mm/day")
     )
 
-    folium.Marker(
-        [10.85, 76.27],
-        popup="Kerala"
-    ).add_to(m)
-
-    st_folium(
-        m,
-        width=900,
-        height=450
+    fig.update_layout(
+        height=420,
+        margin=dict(l=10, r=10, t=50, b=10)
     )
+
+    return fig
