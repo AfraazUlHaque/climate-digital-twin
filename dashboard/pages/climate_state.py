@@ -6,7 +6,7 @@ from components.maps import (
     generate_climate_grid,
     render_climate_map
 )
-from components.charts import (
+from dashboard.components.charts import (
     observed_rainfall_chart,
     observed_temperature_chart
 )

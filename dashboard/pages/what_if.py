@@ -1,6 +1,6 @@
 import streamlit as st
 
-from components.maps import generate_climate_grid, render_climate_map
+from dashboard.components.maps import generate_climate_grid, render_climate_map
 from utils.data_loader import load_data
 from utils.helpers import (
     get_risk_level,
