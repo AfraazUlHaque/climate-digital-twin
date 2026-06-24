@@ -259,7 +259,6 @@ elif page == "Insights":
         combined,
         x="temperature",
         y="rainfall",
-        trendline="ols",
         title="Rainfall vs Temperature"
     )
     st.plotly_chart(fig2, use_container_width=True)
