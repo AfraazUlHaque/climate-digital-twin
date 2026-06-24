@@ -5,7 +5,7 @@ st.title("🧪 What-If Simulator")
 temp = st.slider(
     "Increase Temperature",
     0,
-    5,
+    7,
     2
 )
 
