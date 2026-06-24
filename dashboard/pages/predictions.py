@@ -1,10 +1,26 @@
 import streamlit as st
+import plotly.express as px
 
-st.title("🔮 Climate Predictions")
+from dashboard.utils.data_loader import load_data
 
-st.metric("RMSE", "2.84")
-st.metric("MAE", "1.91")
+def render():
 
-st.success(
-    "Model predicts stable rainfall conditions for next 7 days."
-)
+    rainfall_df, temp_df = load_data()
+
+    st.title("🔮 Predictions")
+
+    st.metric(
+        "Rainfall RMSE",
+        "2.84"
+    )
+
+    fig = px.line(
+        rainfall_df,
+        x="date",
+        y=["actual", "predicted"]
+    )
+
+    st.plotly_chart(
+        fig,
+        use_container_width=True
+    )

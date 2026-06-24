@@ -1,11 +1,10 @@
 import pandas as pd
 import numpy as np
 
-
-def load_demo_data():
+def load_data():
 
     dates = pd.date_range(
-        start="2024-01-01",
+        "2024-01-01",
         periods=60
     )
 

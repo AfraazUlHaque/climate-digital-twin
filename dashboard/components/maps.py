@@ -1,11 +1,11 @@
 import folium
 from streamlit_folium import st_folium
 
+def render_map():
 
-def render_india_map():
     m = folium.Map(
-        location=[20.59, 78.96],
-        zoom_start=5
+        location=[10.5, 77.5],
+        zoom_start=6
     )
 
     folium.Marker(
@@ -13,4 +13,8 @@ def render_india_map():
         popup="Kerala"
     ).add_to(m)
 
-    st_folium(m, width=900, height=450)
+    st_folium(
+        m,
+        width=900,
+        height=450
+    )

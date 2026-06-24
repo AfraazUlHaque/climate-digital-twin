@@ -1,16 +1,14 @@
 import streamlit as st
+from dashboard.components.maps import render_map
 
-st.title("🌦️ AI Climate Digital Twin")
+def render():
 
-st.markdown("""
-### ISRO Hackathon PS-5
+    st.title(
+        "🌦️ AI-Powered Digital Twin of India's Climate"
+    )
 
-Digital Twin of India's Climate
+    st.write(
+        "ISRO Hackathon PS-5"
+    )
 
-Features:
-
-- Rainfall Forecasting
-- Temperature Forecasting
-- What-If Simulator
-- Climate Insights
-""")
+    render_map()

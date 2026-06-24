@@ -1,10 +1,46 @@
-def get_risk_level(temp):
+import streamlit as st
 
-    if temp >= 6:
-        return "Extreme"
-    elif temp >= 4:
-        return "High"
-    elif temp >= 2:
-        return "Moderate"
+from dashboard.pages import (
+    home,
+    climate_state,
+    predictions,
+    what_if,
+    insights
+)
 
-    return "Low"
+st.set_page_config(
+    page_title="Climate Digital Twin",
+    page_icon="🌦️",
+    layout="wide"
+)
+
+st.sidebar.title("🌦️ Climate Digital Twin")
+
+page = st.sidebar.radio(
+    "Navigate",
+    [
+        "Home",
+        "Current Climate State",
+        "Predictions",
+        "What-If Simulator",
+        "Insights"
+    ]
+)
+
+st.sidebar.markdown("---")
+st.sidebar.info("ISRO Hackathon PS-5 MVP")
+
+if page == "Home":
+    home.render()
+
+elif page == "Current Climate State":
+    climate_state.render()
+
+elif page == "Predictions":
+    predictions.render()
+
+elif page == "What-If Simulator":
+    what_if.render()
+
+elif page == "Insights":
+    insights.render()
