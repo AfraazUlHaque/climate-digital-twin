@@ -53,7 +53,7 @@ st.markdown("""
 # -----------------------------
 REGION_INFO = {
     "Kerala": {
-        "rainfall": 122,
+        "rainfall": 129,
         "temperature": 28.4,
         "humidity": 86,
         "wind": 14,
