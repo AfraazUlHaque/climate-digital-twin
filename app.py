@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
+import plotly.graph_objects as go
 
 st.set_page_config(
     page_title="AI Climate Digital Twin",
@@ -12,10 +13,11 @@ st.set_page_config(
 # -----------------------------
 # CSS
 # -----------------------------
+
 st.markdown("""
 <style>
 .block-container {
-    padding-top: 1.5rem;
+    padding-top: 1.2rem;
 }
 .main-title {
     font-size: 34px;
@@ -25,13 +27,6 @@ st.markdown("""
 .sub-title {
     color: #526070;
     font-size: 16px;
-}
-.card {
-    background: #ffffff;
-    padding: 18px;
-    border-radius: 14px;
-    border: 1px solid #e6eaf2;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
 }
 .alert-card {
     background: #ffffff;
@@ -47,13 +42,13 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-
 # -----------------------------
 # REGION DATA
 # -----------------------------
+
 REGION_INFO = {
     "Kerala": {
-        "rainfall": 129,
+        "rainfall": 122,
         "temperature": 28.4,
         "humidity": 86,
         "wind": 14,
@@ -64,20 +59,6 @@ REGION_INFO = {
         "t7_rainfall": 154,
         "t1_temp": 29.1,
         "t7_temp": 30.2,
-        "events": {
-            "2018 Kerala Flood": {
-                "rainfall": 240,
-                "temperature": 27,
-                "risk": "Extreme Flood Risk",
-                "description": "Very high rainfall pattern similar to Kerala 2018 floods."
-            },
-            "2024 Wayanad Landslide": {
-                "rainfall": 190,
-                "temperature": 26,
-                "risk": "Landslide Risk",
-                "description": "Heavy rainfall over hilly terrain causing slope instability."
-            }
-        }
     },
     "Tamil Nadu": {
         "rainfall": 92,
@@ -91,33 +72,51 @@ REGION_INFO = {
         "t7_rainfall": 118,
         "t1_temp": 32.0,
         "t7_temp": 33.1,
-        "events": {
-            "2015 Chennai Flood": {
-                "rainfall": 210,
-                "temperature": 28,
-                "risk": "Urban Flood Risk",
-                "description": "Extreme rainfall pattern similar to Chennai 2015 floods."
-            },
-            "2023 Cyclone Michaung": {
-                "rainfall": 175,
-                "temperature": 29,
-                "risk": "Cyclone Rainfall Risk",
-                "description": "Cyclone-linked heavy rainfall and coastal flooding pattern."
-            }
+    }
+}
+
+EVENTS = {
+    "Kerala": {
+        "2018 Kerala Flood": {
+            "rainfall": 240,
+            "temperature": 27,
+            "risk": "Extreme Flood Risk",
+            "description": "Very high rainfall pattern similar to Kerala 2018 floods."
+        },
+        "2024 Wayanad Landslide": {
+            "rainfall": 190,
+            "temperature": 26,
+            "risk": "Landslide Risk",
+            "description": "Heavy rainfall over hilly terrain causing slope instability."
+        }
+    },
+    "Tamil Nadu": {
+        "2015 Chennai Flood": {
+            "rainfall": 210,
+            "temperature": 28,
+            "risk": "Urban Flood Risk",
+            "description": "Extreme rainfall pattern similar to Chennai 2015 floods."
+        },
+        "2023 Cyclone Michaung": {
+            "rainfall": 175,
+            "temperature": 29,
+            "risk": "Cyclone Rainfall Risk",
+            "description": "Cyclone-linked heavy rainfall and coastal flooding pattern."
         }
     }
 }
 
-
 # -----------------------------
 # DATA
 # -----------------------------
+
 @st.cache_data
 def load_data(region):
     seed = 10 if region == "Kerala" else 20
     np.random.seed(seed)
 
     dates = pd.date_range("2024-01-01", periods=60)
+
     base_rain = REGION_INFO[region]["rainfall"] * 0.65
     base_temp = REGION_INFO[region]["temperature"]
 
@@ -134,6 +133,19 @@ def load_data(region):
     })
 
     return rainfall, temperature
+
+# -----------------------------
+# HELPERS
+# -----------------------------
+
+def scenario_risk(temp_increase, rainfall_change):
+    if temp_increase >= 6 or rainfall_change >= 35:
+        return "Extreme"
+    if temp_increase >= 4 or rainfall_change >= 20:
+        return "High"
+    if temp_increase >= 2 or rainfall_change >= 10:
+        return "Moderate"
+    return "Low"
 
 
 def generate_climate_grid(region, mode="observed", temp_increase=0, rainfall_change=0):
@@ -154,14 +166,77 @@ def generate_climate_grid(region, mode="observed", temp_increase=0, rainfall_cha
     return np.clip(grid, -50, 180)
 
 
-def render_climate_map(grid, title, color_scale="Blues", label="Rainfall mm/day"):
+def render_climate_map(grid, title, color_scale="Blues"):
     fig = px.imshow(
         grid,
         color_continuous_scale=color_scale,
         title=title,
-        labels=dict(color=label)
+        labels=dict(color="Rainfall / Risk")
     )
-    fig.update_layout(height=420, margin=dict(l=10, r=10, t=50, b=10))
+
+    fig.update_layout(
+        height=420,
+        margin=dict(l=10, r=10, t=50, b=10)
+    )
+
+    return fig
+
+
+def render_3d_terrain(region, mode="observed", temp_increase=0, rainfall_change=0):
+    np.random.seed(42 if region == "Kerala" else 84)
+
+    x = np.linspace(0, 10, 70)
+    y = np.linspace(0, 10, 70)
+    X, Y = np.meshgrid(x, y)
+
+    if region == "Kerala":
+        terrain = (
+            2.0 * np.exp(-((X - 3) ** 2 + (Y - 5) ** 2) / 5)
+            + 1.4 * np.exp(-((X - 5) ** 2 + (Y - 7) ** 2) / 8)
+            + 0.25 * np.random.rand(70, 70)
+        )
+    else:
+        terrain = (
+            1.0 * np.exp(-((X - 6) ** 2 + (Y - 4) ** 2) / 7)
+            + 0.5 * np.exp(-((X - 4) ** 2 + (Y - 7) ** 2) / 10)
+            + 0.18 * np.random.rand(70, 70)
+        )
+
+    rainfall = generate_climate_grid(
+        region,
+        mode=mode,
+        temp_increase=temp_increase,
+        rainfall_change=rainfall_change
+    )
+
+    surface_color = np.resize(rainfall, terrain.shape)
+
+    fig = go.Figure(
+        data=[
+            go.Surface(
+                z=terrain,
+                x=X,
+                y=Y,
+                surfacecolor=surface_color,
+                colorscale="Turbo",
+                colorbar=dict(title="Rainfall / Risk"),
+                opacity=0.96
+            )
+        ]
+    )
+
+    fig.update_layout(
+        title=f"3D Terrain Digital Twin — {region}",
+        height=650,
+        scene=dict(
+            xaxis_title="Longitude Index",
+            yaxis_title="Latitude Index",
+            zaxis_title="Terrain Elevation",
+            camera=dict(eye=dict(x=1.6, y=1.6, z=1.15))
+        ),
+        margin=dict(l=0, r=0, t=50, b=0)
+    )
+
     return fig
 
 
@@ -189,32 +264,28 @@ def render_india_map(title, selected_region, color_metric="risk"):
         title=title,
         hover_data=["rainfall", "temperature", "risk"]
     )
+
     fig.update_geos(fitbounds="locations", visible=False)
     fig.update_layout(height=520, margin=dict(l=10, r=10, t=50, b=10))
     return fig
 
-
-def scenario_risk(temp_increase, rainfall_change):
-    if temp_increase >= 6 or rainfall_change >= 35:
-        return "Extreme"
-    if temp_increase >= 4 or rainfall_change >= 20:
-        return "High"
-    if temp_increase >= 2 or rainfall_change >= 10:
-        return "Moderate"
-    return "Low"
-
-
 # -----------------------------
 # SIDEBAR
 # -----------------------------
+
 st.sidebar.markdown("## 🌦️ AI Climate Twin")
-region = st.sidebar.selectbox("Select pilot region", ["Kerala", "Tamil Nadu"])
+
+region = st.sidebar.selectbox(
+    "Select Pilot Region",
+    ["Kerala", "Tamil Nadu"]
+)
 
 page = st.sidebar.radio(
     "Navigation",
     [
         "Overview",
         "Live Monitor",
+        "3D Twin",
         "Forecasts",
         "Alerts",
         "Scenarios",
@@ -224,23 +295,24 @@ page = st.sidebar.radio(
 )
 
 st.sidebar.markdown("---")
-st.sidebar.markdown(f"**Selected:** {region}")
+st.sidebar.markdown(f"**Selected Region:** {region}")
 st.sidebar.caption("ISRO Hackathon PS-5 MVP")
 
 rainfall_df, temp_df = load_data(region)
 current = REGION_INFO[region]
 
-
 # -----------------------------
 # OVERVIEW
 # -----------------------------
+
 if page == "Overview":
     st.markdown('<div class="main-title">AI Climate Digital Twin Platform</div>', unsafe_allow_html=True)
-    st.markdown('<div class="sub-title">Real-time monitoring, forecasting, scenario simulation and decision support</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sub-title">Monitor • Predict • Simulate • Alert • Act</div>', unsafe_allow_html=True)
 
     st.markdown("### Dashboard Overview")
 
     k1, k2, k3, k4, k5 = st.columns(5)
+
     k1.metric("🌡️ Temperature", f"{current['temperature']} °C", "+1.2°C")
     k2.metric("🌧️ Rainfall", f"{current['rainfall']} mm", "+8%")
     k3.metric("💧 Humidity", f"{current['humidity']}%", "-3%")
@@ -252,71 +324,207 @@ if page == "Overview":
     with left:
         st.subheader("Live Map — Climate Risk")
         st.plotly_chart(
-            render_india_map(f"India Climate Risk Map — {region} selected", region, "risk"),
+            render_india_map(
+                f"India Climate Risk Map — {region} Selected",
+                region,
+                "risk"
+            ),
             use_container_width=True
         )
 
     with right:
-        st.subheader("Digital Twin View")
-        grid = generate_climate_grid(region, "observed")
+        st.subheader("3D Digital Twin Preview")
         st.plotly_chart(
-            render_climate_map(grid, f"{region} Digital Twin Climate State", "Viridis"),
+            render_3d_terrain(region, "observed"),
             use_container_width=True
         )
 
     st.subheader("Alerts & Notifications")
 
     a1, a2, a3 = st.columns(3)
+
     a1.warning(f"⚠️ Heavy rainfall possible in {region} in next 24h.")
     a2.info(f"ℹ️ Current flood probability: {current['flood_probability']}%")
-    a3.success("✅ Model pipeline ready for prediction output.")
-
+    a3.success("✅ AI forecast engine ready for prediction output.")
 
 # -----------------------------
 # LIVE MONITOR
 # -----------------------------
+
 elif page == "Live Monitor":
     st.markdown(f'<div class="main-title">Live Climate Monitor — {region}</div>', unsafe_allow_html=True)
 
     c1, c2, c3, c4 = st.columns(4)
+
     c1.metric("Current Rainfall", f"{current['rainfall']} mm/day")
     c2.metric("Current Temperature", f"{current['temperature']} °C")
     c3.metric("Humidity", f"{current['humidity']}%")
     c4.metric("Flood Probability", f"{current['flood_probability']}%")
 
     st.subheader("Current Observed Climate Field")
+
     observed = generate_climate_grid(region, "observed")
+
     st.plotly_chart(
-        render_climate_map(observed, f"{region}: Observed Rainfall Distribution", "Blues"),
+        render_climate_map(
+            observed,
+            f"{region}: Observed Rainfall Distribution",
+            "Blues"
+        ),
         use_container_width=True
     )
 
     st.subheader("Observed Time Series")
+
     st.plotly_chart(
-        px.line(rainfall_df, x="date", y="actual", title=f"{region}: Observed Rainfall Trend"),
-        use_container_width=True
-    )
-    st.plotly_chart(
-        px.line(temp_df, x="date", y="actual", title=f"{region}: Observed Temperature Trend"),
+        px.line(
+            rainfall_df,
+            x="date",
+            y="actual",
+            title=f"{region}: Observed Rainfall Trend"
+        ),
         use_container_width=True
     )
 
+    st.plotly_chart(
+        px.line(
+            temp_df,
+            x="date",
+            y="actual",
+            title=f"{region}: Observed Temperature Trend"
+        ),
+        use_container_width=True
+    )
+
+    st.markdown("---")
+    st.subheader("📌 Past Extreme Event Simulator")
+
+    event = st.selectbox(
+        "Select Historical Event",
+        list(EVENTS[region].keys())
+    )
+
+    selected_event = EVENTS[region][event]
+
+    e1, e2, e3 = st.columns(3)
+
+    e1.metric("Event Rainfall", f"{selected_event['rainfall']} mm/day")
+    e2.metric("Event Temperature", f"{selected_event['temperature']} °C")
+    e3.metric("Event Risk", selected_event["risk"])
+
+    st.info(selected_event["description"])
+
+    event_grid = np.random.normal(
+        loc=selected_event["rainfall"] / 3,
+        scale=20,
+        size=(25, 25)
+    )
+
+    event_grid = np.clip(event_grid, 0, 180)
+
+    st.plotly_chart(
+        render_climate_map(
+            event_grid,
+            f"{region}: {event} Pattern Replay",
+            "OrRd"
+        ),
+        use_container_width=True
+    )
+
+# -----------------------------
+# 3D TWIN
+# -----------------------------
+
+elif page == "3D Twin":
+    st.markdown(f'<div class="main-title">3D Terrain Digital Twin — {region}</div>', unsafe_allow_html=True)
+
+    st.write(
+        "Interactive 3D terrain-style simulation showing regional elevation-like structure with rainfall and climate-risk overlay."
+    )
+
+    view_mode = st.radio(
+        "Select Twin Layer",
+        ["Observed Climate", "AI Predicted Climate", "What-If Scenario"],
+        horizontal=True
+    )
+
+    temp_inc = 0.0
+    rain_change = 0
+
+    if view_mode == "Observed Climate":
+        mode = "observed"
+
+    elif view_mode == "AI Predicted Climate":
+        mode = "predicted"
+
+    else:
+        mode = "scenario"
+
+        s1, s2 = st.columns(2)
+
+        with s1:
+            temp_inc = st.slider(
+                "Temperature Increase Scenario (°C)",
+                0.0,
+                7.0,
+                2.0,
+                0.5
+            )
+
+        with s2:
+            rain_change = st.slider(
+                "Rainfall Change Scenario (%)",
+                -50,
+                50,
+                10,
+                5
+            )
+
+    st.plotly_chart(
+        render_3d_terrain(
+            region,
+            mode=mode,
+            temp_increase=temp_inc,
+            rainfall_change=rain_change
+        ),
+        use_container_width=True
+    )
+
+    c1, c2, c3 = st.columns(3)
+
+    c1.metric("Twin Layer", view_mode)
+    c2.metric("Region", region)
+    c3.metric(
+        "Risk State",
+        scenario_risk(temp_inc, rain_change) if mode == "scenario" else current["risk"]
+    )
+
+    st.info(
+        "MVP note: this 3D surface represents regional terrain-like structure with rainfall/risk overlay. Final version can use real DEM elevation and IMD/INSAT grids."
+    )
 
 # -----------------------------
 # FORECASTS
 # -----------------------------
+
 elif page == "Forecasts":
     st.markdown(f'<div class="main-title">Forecast View — {region}</div>', unsafe_allow_html=True)
 
-    horizon = st.radio("Forecast horizon", ["7 Days", "15 Days", "30 Days"], horizontal=True)
+    horizon = st.radio(
+        "Forecast Horizon",
+        ["7 Days", "15 Days", "30 Days"],
+        horizontal=True
+    )
 
     f1, f2, f3, f4 = st.columns(4)
+
     f1.metric("T+1 Rainfall", f"{current['t1_rainfall']} mm/day")
     f2.metric("T+7 Rainfall", f"{current['t7_rainfall']} mm/day")
     f3.metric("T+1 Temp", f"{current['t1_temp']} °C")
     f4.metric("T+7 Temp", f"{current['t7_temp']} °C")
 
     m1, m2, m3, m4 = st.columns(4)
+
     m1.metric("Rainfall RMSE", "2.84 mm/day")
     m2.metric("Rainfall MAE", "1.91 mm/day")
     m3.metric("Temp RMSE", "1.12 °C")
@@ -327,27 +535,51 @@ elif page == "Forecasts":
     diff = predicted - observed
 
     col1, col2, col3 = st.columns(3)
+
     with col1:
-        st.plotly_chart(render_climate_map(observed, "Observed State", "Blues"), use_container_width=True)
+        st.plotly_chart(
+            render_climate_map(observed, "Observed State", "Blues"),
+            use_container_width=True
+        )
+
     with col2:
-        st.plotly_chart(render_climate_map(predicted, "AI Predicted State", "Viridis"), use_container_width=True)
+        st.plotly_chart(
+            render_climate_map(predicted, "AI Predicted State", "Viridis"),
+            use_container_width=True
+        )
+
     with col3:
-        st.plotly_chart(render_climate_map(diff, "Prediction Difference", "RdBu"), use_container_width=True)
+        st.plotly_chart(
+            render_climate_map(diff, "Prediction Difference", "RdBu"),
+            use_container_width=True
+        )
 
     st.subheader("Forecast Trend")
+
     st.plotly_chart(
-        px.line(rainfall_df, x="date", y=["actual", "predicted"], title=f"{region}: Rainfall Actual vs Predicted"),
-        use_container_width=True
-    )
-    st.plotly_chart(
-        px.line(temp_df, x="date", y=["actual", "predicted"], title=f"{region}: Temperature Actual vs Predicted"),
+        px.line(
+            rainfall_df,
+            x="date",
+            y=["actual", "predicted"],
+            title=f"{region}: Rainfall Actual vs Predicted"
+        ),
         use_container_width=True
     )
 
+    st.plotly_chart(
+        px.line(
+            temp_df,
+            x="date",
+            y=["actual", "predicted"],
+            title=f"{region}: Temperature Actual vs Predicted"
+        ),
+        use_container_width=True
+    )
 
 # -----------------------------
 # ALERTS
 # -----------------------------
+
 elif page == "Alerts":
     st.markdown(f'<div class="main-title">Alerts Panel — {region}</div>', unsafe_allow_html=True)
 
@@ -376,58 +608,124 @@ elif page == "Alerts":
         </div>
         """, unsafe_allow_html=True)
 
-
 # -----------------------------
 # SCENARIOS
 # -----------------------------
+
 elif page == "Scenarios":
     st.markdown(f'<div class="main-title">Scenario Simulation — {region}</div>', unsafe_allow_html=True)
 
-    temp_inc = st.slider("Temperature Change (°C)", 0.0, 7.0, 2.0, 0.5)
-    rain_change = st.slider("Rainfall Change (%)", -50, 50, 10, 5)
-    co2 = st.slider("CO₂ Concentration Change (ppm)", 0, 200, 100, 10)
+    s1, s2, s3 = st.columns(3)
+
+    with s1:
+        temp_inc = st.slider(
+            "Temperature Change (°C)",
+            0.0,
+            7.0,
+            2.0,
+            0.5
+        )
+
+    with s2:
+        rain_change = st.slider(
+            "Rainfall Change (%)",
+            -50,
+            50,
+            10,
+            5
+        )
+
+    with s3:
+        co2 = st.slider(
+            "CO₂ Concentration Change (ppm)",
+            0,
+            200,
+            100,
+            10
+        )
 
     risk = scenario_risk(temp_inc, rain_change)
 
     p1, p2, p3, p4 = st.columns(4)
+
     p1.metric("Avg Temperature", f"+{temp_inc} °C")
     p2.metric("Rainfall", f"{rain_change}%")
-    p3.metric("Extreme Events", "↑ 15%" if risk in ["High", "Extreme"] else "↑ 5%")
+    p3.metric("CO₂ Change", f"+{co2} ppm")
     p4.metric("Scenario Risk", risk)
 
     current_grid = generate_climate_grid(region, "observed")
     future_grid = generate_climate_grid(region, "scenario", temp_inc, rain_change)
     impact = future_grid - current_grid
 
+    st.subheader("2D Scenario Response")
+
     col1, col2, col3 = st.columns(3)
+
     with col1:
-        st.plotly_chart(render_climate_map(current_grid, "Current Twin State", "Blues"), use_container_width=True)
+        st.plotly_chart(
+            render_climate_map(current_grid, "Current Twin State", "Blues"),
+            use_container_width=True
+        )
+
     with col2:
-        st.plotly_chart(render_climate_map(future_grid, "What-If Future State", "OrRd"), use_container_width=True)
+        st.plotly_chart(
+            render_climate_map(future_grid, "What-If Future State", "OrRd"),
+            use_container_width=True
+        )
+
     with col3:
-        st.plotly_chart(render_climate_map(impact, "Impact Difference Map", "RdBu"), use_container_width=True)
+        st.plotly_chart(
+            render_climate_map(impact, "Impact Difference Map", "RdBu"),
+            use_container_width=True
+        )
+
+    st.subheader("3D Scenario Response")
+
+    st.plotly_chart(
+        render_3d_terrain(
+            region,
+            "scenario",
+            temp_increase=temp_inc,
+            rainfall_change=rain_change
+        ),
+        use_container_width=True
+    )
 
     scenario_temp = temp_df.copy()
     scenario_temp["future"] = scenario_temp["predicted"] + temp_inc
 
     scenario_rain = rainfall_df.copy()
-    scenario_rain["future"] = scenario_rain["predicted"] * (1 + rain_change / 100) - temp_inc * 2
-
-    st.plotly_chart(
-        px.line(scenario_temp, x="date", y=["predicted", "future"], title="Temperature Scenario Response"),
-        use_container_width=True
-    )
-    st.plotly_chart(
-        px.line(scenario_rain, x="date", y=["predicted", "future"], title="Rainfall Scenario Response"),
-        use_container_width=True
+    scenario_rain["future"] = (
+        scenario_rain["predicted"] * (1 + rain_change / 100)
+        - temp_inc * 2
     )
 
-    st.info("Scenario output is an MVP perturbation engine. Final system will use model inference.")
+    st.plotly_chart(
+        px.line(
+            scenario_temp,
+            x="date",
+            y=["predicted", "future"],
+            title="Temperature Scenario Response"
+        ),
+        use_container_width=True
+    )
 
+    st.plotly_chart(
+        px.line(
+            scenario_rain,
+            x="date",
+            y=["predicted", "future"],
+            title="Rainfall Scenario Response"
+        ),
+        use_container_width=True
+    )
+
+    st.info("Scenario output is an MVP perturbation engine. Final system will use trained model inference.")
 
 # -----------------------------
 # ANALYTICS
 # -----------------------------
+
 elif page == "Analytics":
     st.markdown(f'<div class="main-title">Analytics & Insights — {region}</div>', unsafe_allow_html=True)
 
@@ -443,12 +741,22 @@ elif page == "Analytics":
 
     with i2:
         st.plotly_chart(
-            px.line(temp_df, x="date", y=["actual", "predicted"], title="Temperature Trend Analysis"),
+            px.line(
+                temp_df,
+                x="date",
+                y=["actual", "predicted"],
+                title="Temperature Trend Analysis"
+            ),
             use_container_width=True
         )
 
     st.plotly_chart(
-        px.box(rainfall_df, x="month", y="actual", title=f"{region}: Rainfall Distribution by Month"),
+        px.box(
+            rainfall_df,
+            x="month",
+            y="actual",
+            title=f"{region}: Rainfall Distribution by Month"
+        ),
         use_container_width=True
     )
 
@@ -458,14 +766,19 @@ elif page == "Analytics":
     })
 
     st.plotly_chart(
-        px.scatter(combined, x="temperature", y="rainfall", title=f"{region}: Rainfall vs Temperature"),
+        px.scatter(
+            combined,
+            x="temperature",
+            y="rainfall",
+            title=f"{region}: Rainfall vs Temperature"
+        ),
         use_container_width=True
     )
-
 
 # -----------------------------
 # REPORTS
 # -----------------------------
+
 elif page == "Reports":
     st.markdown(f'<div class="main-title">Reports & Exports — {region}</div>', unsafe_allow_html=True)
 
@@ -473,20 +786,32 @@ elif page == "Reports":
 
     with r1:
         st.subheader("Generate Report")
-        report_type = st.selectbox("Report Type", ["Climate Summary", "Forecast Report", "Alert Report", "Scenario Report"])
-        period = st.selectbox("Time Period", ["Last 7 Days", "Last 15 Days", "Last 30 Days"])
+
+        report_type = st.selectbox(
+            "Report Type",
+            ["Climate Summary", "Forecast Report", "Alert Report", "Scenario Report"]
+        )
+
+        period = st.selectbox(
+            "Time Period",
+            ["Last 7 Days", "Last 15 Days", "Last 30 Days"]
+        )
+
         if st.button("Generate Report"):
             st.success(f"{report_type} generated for {region} — {period}")
 
     with r2:
         st.subheader("Export Options")
+
         e1, e2 = st.columns(2)
+
         e1.download_button(
-            "📄 Download CSV",
+            "📄 Download Rainfall CSV",
             rainfall_df.to_csv(index=False),
             file_name=f"{region.lower()}_rainfall_report.csv",
             mime="text/csv"
         )
+
         e2.download_button(
             "📊 Download Temperature CSV",
             temp_df.to_csv(index=False),
