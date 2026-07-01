@@ -1,0 +1,178 @@
+:root {
+  --bg-primary: #0b0f19;
+  --bg-secondary: #161b26;
+  --bg-surface: #1f2635;
+  --text-main: #f3f4f6;
+  --text-muted: #9ca3af;
+  --accent-blue: #3b82f6;
+  --accent-cyan: #06b6d4;
+  --accent-green: #10b981;
+  --accent-amber: #f59e0b;
+  --accent-danger: #ef4444;
+  --border-color: #2e3748;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-main);
+  overflow-x: hidden;
+}
+
+.app-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Sidebar Styling */
+.sidebar {
+  width: 260px;
+  background-color: var(--bg-secondary);
+  border-right: 1px solid var(--border-color);
+  padding: 2rem 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--accent-cyan);
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.nav-links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  list-style: none;
+}
+
+.nav-item a {
+  display: block;
+  padding: 0.75rem 1rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  border-radius: 6px;
+  transition: all 0.2s ease-in-out;
+}
+
+.nav-item a:hover, .nav-item a.active {
+  background-color: var(--bg-surface);
+  color: var(--text-main);
+  border-left: 4px solid var(--accent-blue);
+}
+
+/* Main Layout Viewport */
+.main-viewport {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+/* Reusable Metric Card Grid Units */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.metric-card {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: transform 0.2s;
+}
+
+.metric-card:hover {
+  transform: translateY(-4px);
+}
+
+.metric-header {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.metric-value {
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+/* Dynamic Badge Alerts */
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.badge-low { background: rgba(16, 185, 129, 0.2); color: var(--accent-green); }
+.badge-medium { background: rgba(245, 158, 11, 0.2); color: var(--accent-amber); }
+.badge-high { background: rgba(239, 68, 68, 0.2); color: var(--accent-danger); }
+
+/* Forms & Structural Controllers */
+.controls-container {
+  background-color: var(--bg-secondary);
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  margin-bottom: 2rem;
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+input, select, button {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  padding: 0.6rem 1rem;
+  color: var(--text-main);
+  border-radius: 6px;
+  outline: none;
+}
+
+button {
+  background-color: var(--accent-blue);
+  cursor: pointer;
+  font-weight: 600;
+  border: none;
+  transition: opacity 0.2s;
+}
+
+button:hover { opacity: 0.9; }
+
+.chart-wrapper {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 2rem;
+}
+
+/* Map Display Frame */
+.leaflet-container {
+  width: 100%;
+  height: 550px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+}

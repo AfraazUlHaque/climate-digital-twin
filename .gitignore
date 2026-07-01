@@ -1,0 +1,42 @@
+# Python
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+
+# Node
+node_modules/
+dist/
+.vite/
+
+# Environment
+.env
+.env.*
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Generated outputs
+backend/outputs/
+
+# Datasets
+backend/data/raw/
+backend/data/intermediate/
+backend/data/processed/
+
+# Trained models
+*.pt
+*.pth
+*.pkl
+*.joblib
+*.onnx
+
+# Large data
+*.csv
+*.grd
+*.npy
+*.parquet
